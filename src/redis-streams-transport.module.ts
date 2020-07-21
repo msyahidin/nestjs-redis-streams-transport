@@ -3,7 +3,7 @@ import { RedisStreamsTransportService } from './redis-streams-transport.service'
 import {
   RedisStreamModuleOptions,
   RedisStreamsModuleAsyncOptions,
-  RedisStreamsOptionsFactory,
+  RedisStreamsOptionsFactory
 } from './interfaces';
 import { createRedisStreamsClientProvider } from './redis-streams-client.providers';
 import { REDIS_STREAMS_CLIENT_MODULE_OPTIONS } from './constants';
@@ -12,13 +12,13 @@ import { ClientProxy } from '@nestjs/microservices';
 
 @Module({
   providers: [{ provide: ClientProxy, useClass: RedisStreamClient }],
-  exports: [{ provide: ClientProxy, useExisting: RedisStreamClient }],
+  exports: [{ provide: ClientProxy, useExisting: RedisStreamClient }]
 })
 export class RedisStreamsClientModule {
   static register(options: RedisStreamModuleOptions): DynamicModule {
     return {
       module: RedisStreamsClientModule,
-      providers: createRedisStreamsClientProvider(options),
+      providers: createRedisStreamsClientProvider(options)
     };
   }
 
@@ -26,12 +26,12 @@ export class RedisStreamsClientModule {
     return {
       module: RedisStreamsClientModule,
       imports: options.imports || [],
-      providers: this.createAsyncProviders(options),
+      providers: this.createAsyncProviders(options)
     };
   }
 
   private static createAsyncProviders(
-    options: RedisStreamsModuleAsyncOptions,
+    options: RedisStreamsModuleAsyncOptions
   ): Provider[] {
     if (options.useExisting || options.useFactory) {
       return [this.createAsyncOptionsProvider(options)];
@@ -40,31 +40,31 @@ export class RedisStreamsClientModule {
     if (options.useClass) {
       returnProvider.push({
         provide: options.useClass,
-        useClass: options.useClass,
+        useClass: options.useClass
       });
     }
     return returnProvider;
   }
 
   private static createFactoryProvider(
-    injectable: Type<RedisStreamsOptionsFactory>,
+    injectable: Type<RedisStreamsOptionsFactory>
   ): Provider {
     return {
       provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
       useFactory: async (optionsFactory: RedisStreamsOptionsFactory) =>
         await optionsFactory.createRedisStreamsClientOptions(),
-      inject: [injectable],
+      inject: [injectable]
     };
   }
 
   private static createAsyncOptionsProvider(
-    options: RedisStreamsModuleAsyncOptions,
+    options: RedisStreamsModuleAsyncOptions
   ): Provider {
     if (options.useFactory) {
       return {
         provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
         useFactory: options.useFactory,
-        inject: options.inject || [],
+        inject: options.inject || []
       };
     }
     if (options.useExisting) {
@@ -76,7 +76,7 @@ export class RedisStreamsClientModule {
 
     return {
       provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
-      useValue: {},
+      useValue: {}
     };
   }
 }

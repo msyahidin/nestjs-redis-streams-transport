@@ -33,8 +33,10 @@ export class RedisStreamClient extends ClientProxy {
     options?: RedisOptions['options'],
   ) {
     super();
-    this.options = options ?? {};
 
+    // console.log(options);
+    this.options = options ?? {};
+    // console.log(this.options);
     this.url = _get(this.options, 'url');
 
     this.initializeSerializer(options);
@@ -67,6 +69,7 @@ export class RedisStreamClient extends ClientProxy {
   public createClient(error$: Subject<Error>): RedisClient {
     return createClient({
       ...this.getClientOptions(error$),
+      password: this.options?.password,
       url: this.url,
     });
   }
@@ -75,8 +78,9 @@ export class RedisStreamClient extends ClientProxy {
     const retry_strategy = (options: RetryStrategyOptions) =>
       this.createRetryStrategy(options, error$);
 
+      const options = this.options as any;
     return {
-      ...(this.options || {}),
+      ...options.options,
       retry_strategy,
     };
   }
