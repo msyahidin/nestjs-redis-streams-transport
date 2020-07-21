@@ -2,6 +2,10 @@
 
 Redis Streams server strategy and client module for [Nest](https://github.com/nestjs/nest) based on the [node-redis](https://github.com/NodeRedis/node-redis) package.
 
+## Warning
+
+At the moment the redis streams strategy only supports event based microservice communication.
+
 ## Installation
 
 ```bash
