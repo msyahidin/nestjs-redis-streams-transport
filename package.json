@@ -1,6 +1,6 @@
 {
   "name": "@mark_hoog/redis-streams-transport",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A transport layer for nestjs microservices",
   "main": "dist/index.js",
   "scripts": {
