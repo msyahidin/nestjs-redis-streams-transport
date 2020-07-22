@@ -17,7 +17,7 @@ export class RedisStreamStrategy extends Server
     this.initializeDeserializer(options);
   }
 
-  listen(callback: () => void) {
+  listen(callback: () => void): void {
     this.client = this.createRedisClient();
     this.start(callback);
   }
@@ -95,7 +95,7 @@ export class RedisStreamStrategy extends Server
         consumerGroup,
         consumer,
         'BLOCK',
-        0,
+        50,
         'NOACK',
         'STREAMS',
         stream,
