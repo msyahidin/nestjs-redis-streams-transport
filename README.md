@@ -9,7 +9,7 @@ At the moment the redis streams strategy only supports event based microservice 
 ## Installation
 
 ```bash
-$ npm i --save @hoogie/redis-stream-transport
+$ npm i --save npm i @mark_hoog/redis-streams-transport
 ```
 
 ## Usage
@@ -26,7 +26,7 @@ async function bootstrap() {
     strategy: new RedisStreamStrategy({
       // consumerGroup: 'example-group',
       // consumer: 'example-consumer',
-    })
+    }),
   });
   app.listen(() => console.log('Microservice is listening'));
 }
@@ -65,10 +65,8 @@ Quite often you might want to asynchronously pass your module options instead of
 ```typescript
 RedisStreamsClientModule.registerAsync({
   useFactory: () => ({
-    options: {
-      url: 'redis://localhost:6379'
-    }
-  })
+    url: 'redis://localhost:6379',
+  }),
 });
 ```
 
@@ -78,10 +76,8 @@ Obviously, our factory behaves like every other one (might be `async` and is abl
 RedisStreamsClientModule.registerAsync({
   imports: [ConfigModule],
   useFactory: async (configService: ConfigService) => ({
-    options: {
-      url: configService.get('REDIS_URL', undefined),
-      password: configService.get('REDIS_PASSWORD', undefined),
-    },
+    url: configService.get('REDIS_URL', undefined),
+    password: configService.get('REDIS_PASSWORD', undefined),
   }),
   inject: [ConfigService],
 }),
