@@ -27,20 +27,8 @@ declare module 'redis' {
       ...args: Array<string | Callback<void>>
     ): boolean;
 
-    xadd(
-      key: string,
-      id: string,
-      field: string,
-      value: string,
-      ...args: Array<string | Callback<void>>
-    ): boolean;
-    XADD(
-      key: string,
-      id: string,
-      field: string,
-      value: string,
-      ...args: Array<string | Callback<void>>
-    ): boolean;
+    xadd: OverloadedKeyCommand<string | number, [number, number], boolean>;
+    XADD: OverloadedKeyCommand<string | number, [number, number], boolean>;
 
     /**
      * Get the score associated with the given member in a sorted set.

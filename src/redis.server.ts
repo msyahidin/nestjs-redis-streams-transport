@@ -2,6 +2,7 @@ import { Server, CustomTransportStrategy } from '@nestjs/microservices';
 import { RedisClient, createClient } from 'redis';
 import { RedisStreamTransportOptions } from './interfaces';
 import { RedisStreamContext } from './redis.stream.context';
+import { replyToObject } from './utils/reply-to-object';
 
 export class RedisStreamStrategy extends Server
   implements CustomTransportStrategy {
@@ -21,7 +22,8 @@ export class RedisStreamStrategy extends Server
     this.client = this.createRedisClient();
     this.start(callback);
   }
-  close() {
+
+  close(): void {
     throw new Error('Method not implemented.');
   }
 
@@ -40,22 +42,21 @@ export class RedisStreamStrategy extends Server
 
   public bindHandlers(): void {
     const patterns = [...this.messageHandlers.keys()];
-    while (patterns.length) {
-      const pattern = patterns.pop();
-      if (pattern) {
-        const handler = this.messageHandlers.get(pattern);
-        if (handler) {
-          this.xread(pattern, async (stream) => {
-            const [id, payload] = stream;
-            const streamContext = new RedisStreamContext([pattern, id]);
-            const { data } = this.deserializer.deserialize(
-              JSON.parse(payload[1])
-            );
-            await handler(data, streamContext);
-          });
+
+    this.xread(patterns, async (pattern: string, stream: any) => {
+      const [id, payload] = stream;
+      const streamContext = new RedisStreamContext([pattern, id]);
+
+      const handler = this.messageHandlers.get(pattern);
+      if (handler) {
+        let reply = replyToObject(payload);
+        if (reply && reply.hasOwnProperty('message')) {
+          reply = reply.message;
         }
+
+        await handler(reply, streamContext);
       }
-    }
+    });
   }
 
   private createConsumerGroupIfNotExists(
@@ -86,32 +87,46 @@ export class RedisStreamStrategy extends Server
     });
   }
 
-  private async xread(stream: string, cb: any) {
+  private async xreadGroup(
+    streams: string[],
+    consumerGroup: string,
+    consumer: string,
+    cb: (pattern: string, value: any) => void
+  ) {
+    this.client.xreadgroup(
+      'GROUP',
+      consumerGroup,
+      consumer,
+      'BLOCK',
+      0,
+      'NOACK',
+      'STREAMS',
+      ...streams,
+      ...streams.map((_) => '>'),
+      (err, str) => {
+        if (err) return this.logger.warn(err, 'Error reading from stream: ');
+
+        if (str) {
+          str[0][1].forEach((message) => {
+            cb(str[0][0], message);
+          });
+        }
+
+        this.xread(streams, cb);
+      }
+    );
+  }
+
+  private async xread(stream: string[], cb: any): Promise<void> {
     if (this.options?.consumerGroup) {
       const { consumerGroup, consumer } = this.options;
-      await this.createConsumerGroupIfNotExists(stream, consumerGroup);
-      this.client.xreadgroup(
-        'GROUP',
-        consumerGroup,
-        consumer,
-        'BLOCK',
-        50,
-        'NOACK',
-        'STREAMS',
-        stream,
-        '>',
-        (err, str) => {
-          if (err) return this.logger.warn(err, 'Error reading from stream: ');
-
-          if (str) {
-            str[0][1].forEach((message) => {
-              cb(message);
-            });
-          }
-
-          this.xread(stream, cb);
-        }
-      );
+      stream.forEach(async (stream) => {
+        await this.createConsumerGroupIfNotExists(stream, consumerGroup);
+      });
+      this.xreadGroup(stream, consumerGroup, consumer, cb);
+      return;
     }
+    // without consumer group
+    throw new Error('Method not yes implemented');
   }
 }

@@ -30,13 +30,11 @@ export class RedisStreamClient extends ClientProxy {
 
   constructor(
     @Inject(REDIS_STREAMS_CLIENT_MODULE_OPTIONS)
-    options?: RedisOptions['options'],
+    options?: RedisOptions['options']
   ) {
     super();
 
-    // console.log(options);
     this.options = options ?? {};
-    // console.log(this.options);
     this.url = _get(this.options, 'url');
 
     this.initializeSerializer(options);
@@ -62,7 +60,7 @@ export class RedisStreamClient extends ClientProxy {
     return this.connection;
   }
 
-  public handleError(client: RedisClient) {
+  public handleError(client: RedisClient): void {
     client.addListener(ERROR_EVENT, (err: any) => this.logger.error(err));
   }
 
@@ -78,7 +76,7 @@ export class RedisStreamClient extends ClientProxy {
     const retry_strategy = (options: RetryStrategyOptions) =>
       this.createRetryStrategy(options, error$);
 
-      const options = this.options as any;
+    const options = this.options as any;
     return {
       ...options.options,
       retry_strategy,
@@ -87,7 +85,7 @@ export class RedisStreamClient extends ClientProxy {
 
   public createRetryStrategy(
     options: RetryStrategyOptions,
-    error$: Subject<Error>,
+    error$: Subject<Error>
   ): undefined | number | Error {
     if (options.error && (options.error as any).code === ECONNREFUSED) {
       error$.error(options.error);
@@ -104,28 +102,47 @@ export class RedisStreamClient extends ClientProxy {
     return _get(this.options, 'retryDelay', 0);
   }
 
-  close() {
-    throw new Error('Method not implemented.');
+  close(): void {
+    this.isExplicitlyTerminated = true;
+    this.client && this.client.quit();
   }
+
   protected publish(
     packet: ReadPacket<any>,
-    callback: (packet: WritePacket<any>) => void,
-  ): Function {
+    callback: (packet: WritePacket<any>) => void
+  ): () => any {
     throw new Error('Method not implemented.');
   }
 
   protected dispatchEvent<T = any>(packet: ReadPacket<any>): Promise<T> {
     const pattern = this.normalizePattern(packet.pattern);
     const serializedPacket = this.serializer.serialize(packet);
+    const payload = serializedPacket.data;
+    const canBeSerialized = (arg: any) =>
+      typeof arg === 'object' && arg !== null && !Array.isArray(arg);
+
+    if (canBeSerialized(payload)) {
+      const redisArgs = Object.entries(payload).flatMap(([property, value]) => [
+        property,
+        canBeSerialized(value) ? JSON.stringify(value) : value,
+      ]) as string[];
+      return new Promise((resolve, reject) =>
+        this.client.xadd(pattern, '*', ...redisArgs, (err) => {
+          err ? reject(err) : resolve();
+        })
+      );
+    }
 
     return new Promise((resolve, reject) =>
       this.client.xadd(
         pattern,
         '*',
         'message',
-        JSON.stringify(serializedPacket),
-        err => (err ? reject(err) : resolve()),
-      ),
+        Array.isArray(payload) ? JSON.stringify(payload) : payload,
+        (err) => {
+          err ? reject(err) : resolve();
+        }
+      )
     );
   }
 }
