@@ -6,11 +6,11 @@ export class RedisStreamContext extends BaseRpcContext<RedisStreamContextArgs> {
     super(args);
   }
 
-  getStream() {
+  getStream(): string {
     return this.args[0];
   }
 
-  getId() {
+  getId(): string {
     return this.args[1];
   }
 }

@@ -1,9 +1,8 @@
 import { Module, DynamicModule, Provider, Type } from '@nestjs/common';
-import { RedisStreamsTransportService } from './redis-streams-transport.service';
 import {
   RedisStreamModuleOptions,
   RedisStreamsModuleAsyncOptions,
-  RedisStreamsOptionsFactory
+  RedisStreamsOptionsFactory,
 } from './interfaces';
 import { createRedisStreamsClientProvider } from './redis-streams-client.providers';
 import { REDIS_STREAMS_CLIENT_MODULE_OPTIONS } from './constants';
@@ -12,13 +11,13 @@ import { ClientProxy } from '@nestjs/microservices';
 
 @Module({
   providers: [{ provide: ClientProxy, useClass: RedisStreamClient }],
-  exports: [{ provide: ClientProxy, useExisting: RedisStreamClient }]
+  exports: [{ provide: ClientProxy, useExisting: RedisStreamClient }],
 })
 export class RedisStreamsClientModule {
   static register(options: RedisStreamModuleOptions): DynamicModule {
     return {
       module: RedisStreamsClientModule,
-      providers: createRedisStreamsClientProvider(options)
+      providers: createRedisStreamsClientProvider(options),
     };
   }
 
@@ -26,7 +25,7 @@ export class RedisStreamsClientModule {
     return {
       module: RedisStreamsClientModule,
       imports: options.imports || [],
-      providers: this.createAsyncProviders(options)
+      providers: this.createAsyncProviders(options),
     };
   }
 
@@ -40,7 +39,7 @@ export class RedisStreamsClientModule {
     if (options.useClass) {
       returnProvider.push({
         provide: options.useClass,
-        useClass: options.useClass
+        useClass: options.useClass,
       });
     }
     return returnProvider;
@@ -53,7 +52,7 @@ export class RedisStreamsClientModule {
       provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
       useFactory: async (optionsFactory: RedisStreamsOptionsFactory) =>
         await optionsFactory.createRedisStreamsClientOptions(),
-      inject: [injectable]
+      inject: [injectable],
     };
   }
 
@@ -64,7 +63,7 @@ export class RedisStreamsClientModule {
       return {
         provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
         useFactory: options.useFactory,
-        inject: options.inject || []
+        inject: options.inject || [],
       };
     }
     if (options.useExisting) {
@@ -76,7 +75,7 @@ export class RedisStreamsClientModule {
 
     return {
       provide: REDIS_STREAMS_CLIENT_MODULE_OPTIONS,
-      useValue: {}
+      useValue: {},
     };
   }
 }

@@ -4,8 +4,13 @@
   "description": "A transport layer for nestjs microservices",
   "main": "dist/index.js",
   "scripts": {
+    "build:watch": "tsc -w",
+    "build": "tsc",
+    "prepare": "npm run build",
+    "format": "prettier --write \"src/**/*ts\"",
+    "lint": "eslint \"src/**/*ts\" --fix",
     "test": "jest",
-    "build": "tsc"
+    "test:watch": "jest --watch"
   },
   "repository": {
     "type": "git",
