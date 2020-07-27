@@ -31,6 +31,8 @@ export interface RedisStreamsModuleAsyncOptions
   useClass?: Type<RedisStreamsOptionsFactory>;
   useFactory?: (
     ...args: any[]
-  ) => Promise<RedisStreamModuleOptions> | RedisStreamModuleOptions;
+  ) =>
+    | Promise<RedisStreamModuleOptions['options']>
+    | RedisStreamModuleOptions['options'];
   inject?: any[];
 }
