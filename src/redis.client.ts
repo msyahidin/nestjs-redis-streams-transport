@@ -78,7 +78,7 @@ export class RedisStreamClient extends ClientProxy {
 
     const options = this.options as any;
     return {
-      ...options.options,
+      ...options,
       retry_strategy,
     };
   }
