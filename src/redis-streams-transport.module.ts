@@ -14,7 +14,7 @@ import { ClientProxy } from '@nestjs/microservices';
   exports: [{ provide: ClientProxy, useExisting: RedisStreamClient }],
 })
 export class RedisStreamsClientModule {
-  static register(options: RedisStreamModuleOptions): DynamicModule {
+  static register(options: RedisStreamModuleOptions['options']): DynamicModule {
     return {
       module: RedisStreamsClientModule,
       providers: createRedisStreamsClientProvider(options),

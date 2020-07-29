@@ -41,9 +41,7 @@ To create a client instance with the `RedisStreamsClientModule`, import it and u
 @Module({
   imports: [
     RedisStreamsClientModule.register({
-      options: {
-        url: 'redis://localhost:6379',
-      }
+      url: 'redis://localhost:6379',
     }),
   ]
   ...
