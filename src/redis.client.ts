@@ -119,9 +119,9 @@ export class RedisStreamClient extends ClientProxy {
     const serializedPacket = this.serializer.serialize(packet);
     const payload = serializedPacket.data;
     const canBeSerialized = (arg: any) =>
-      typeof arg === 'object' && arg !== null && !Array.isArray(arg);
+      typeof arg === 'object' && arg !== null;
 
-    if (canBeSerialized(payload)) {
+    if (canBeSerialized(payload) && !Array.isArray(payload)) {
       const redisArgs = Object.entries(payload).flatMap(([property, value]) => [
         property,
         canBeSerialized(value) ? JSON.stringify(value) : value,
