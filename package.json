@@ -32,7 +32,7 @@
     "@nestjs/microservices": "^7.3.0"
   },
   "dependencies": {
-    "@nestjs/microservices": "^7.3.0",
+    "@nestjs/microservices": "^7.4.4",
     "@types/redis": "^2.8.25",
     "redis": "^3.0.2",
     "rxjs": "^6.6.0"

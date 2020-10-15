@@ -7,7 +7,8 @@ export const replyToObject = (reply: any): any => {
   }
   const obj = {};
   for (let i = 0; i < reply.length; i += 2) {
-    obj[reply[i].toString('binary')] = parseJson(reply[i + 1]) || reply[i + 1];
+    const parsed = parseJson(reply[i + 1]);
+    obj[reply[i].toString('binary')] = parsed !== false ? parsed : reply[i + 1];
   }
   return obj;
 };
