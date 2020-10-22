@@ -15,6 +15,7 @@ export class RedisStreamStrategy extends Server
   implements CustomTransportStrategy {
   private readonly url: string;
   private client: RedisClient;
+  private isExplicitlyTerminated = false;
 
   constructor(
     private readonly options?: RedisStreamTransportOptions['options']
@@ -33,7 +34,8 @@ export class RedisStreamStrategy extends Server
   }
 
   close(): void {
-    throw new Error('Method not implemented.');
+    this.isExplicitlyTerminated = true;
+    this.client && this.client.quit();
   }
 
   private createRedisClient(): RedisClient {
@@ -165,9 +167,9 @@ export class RedisStreamStrategy extends Server
       this.logger.error(`Error ECONNREFUSED: ${this.url}`);
     }
     const retryAttempts = get(this.options, 'retryAttempts');
-    // if (this.isExplicitlyTerminated) {
-    //   return undefined;
-    // }
+    if (this.isExplicitlyTerminated) {
+      return undefined;
+    }
 
     if (!retryAttempts || options.attempt > retryAttempts) {
       this.logger.error(`Retry time exhausted: ${this.url}`);
