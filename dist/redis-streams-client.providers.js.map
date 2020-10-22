@@ -1,0 +1,1 @@
+{"version":3,"file":"redis-streams-client.providers.js","sourceRoot":"","sources":["../src/redis-streams-client.providers.ts"],"names":[],"mappings":";;;AACA,2CAAkE;AAElE,SAAgB,gCAAgC,CAC9C,OAA4C;IAE5C,OAAO;QACL,EAAE,OAAO,EAAE,+CAAmC,EAAE,QAAQ,EAAE,OAAO,IAAI,EAAE,EAAE;KAC1E,CAAC;AACJ,CAAC;AAND,4EAMC"}
