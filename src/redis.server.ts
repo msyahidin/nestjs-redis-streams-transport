@@ -1,8 +1,15 @@
 import { Server, CustomTransportStrategy } from '@nestjs/microservices';
-import { RedisClient, createClient } from 'redis';
+import {
+  RedisClient,
+  createClient,
+  RetryStrategyOptions,
+  ClientOpts,
+} from 'redis';
 import { RedisStreamTransportOptions } from './interfaces';
 import { RedisStreamContext } from './redis.stream.context';
 import { replyToObject } from './utils/reply-to-object';
+import { get } from 'lodash';
+import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
 
 export class RedisStreamStrategy extends Server
   implements CustomTransportStrategy {
@@ -20,6 +27,8 @@ export class RedisStreamStrategy extends Server
 
   listen(callback: () => void): void {
     this.client = this.createRedisClient();
+    this.handleError(this.client);
+
     this.start(callback);
   }
 
@@ -28,16 +37,19 @@ export class RedisStreamStrategy extends Server
   }
 
   private createRedisClient(): RedisClient {
-    const options = this.options || {};
-    return createClient(options);
+    return createClient({ ...this.getClientOptions() });
   }
 
   // Internal methods
   public start(callback: () => void): void {
-    // register redis message handlers
-    this.bindHandlers();
     // call any user-supplied callback from `app.listen()` call
-    callback();
+    this.client.on(CONNECT_EVENT, callback);
+
+    // register redis message handlers
+    this.client.on('ready', () => {
+      this.logger.debug('Redis connection is ready');
+      this.bindHandlers();
+    });
   }
 
   public bindHandlers(): void {
@@ -128,5 +140,39 @@ export class RedisStreamStrategy extends Server
     }
     // without consumer group
     throw new Error('Method not yes implemented');
+  }
+
+  public getClientOptions(): Partial<ClientOpts> {
+    const retry_strategy = (options: RetryStrategyOptions) =>
+      this.createRetryStrategy(options);
+
+    return {
+      ...(this.options || {}),
+      retry_strategy,
+    };
+  }
+
+  public handleError(stream: any): void {
+    stream.on(ERROR_EVENT, (err: any) => this.logger.error(err));
+  }
+
+  public createRetryStrategy(
+    options: RetryStrategyOptions
+  ): undefined | number | void {
+    this.logger.log('Retrying connection');
+
+    if (options.error && (options.error as any).code === 'ECONNREFUSED') {
+      this.logger.error(`Error ECONNREFUSED: ${this.url}`);
+    }
+    const retryAttempts = get(this.options, 'retryAttempts');
+    // if (this.isExplicitlyTerminated) {
+    //   return undefined;
+    // }
+
+    if (!retryAttempts || options.attempt > retryAttempts) {
+      this.logger.error(`Retry time exhausted: ${this.url}`);
+      throw new Error('Retry time exhausted');
+    }
+    return get(this.options, 'retryDelay') || 0;
   }
 }
