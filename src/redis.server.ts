@@ -161,7 +161,7 @@ export class RedisStreamStrategy extends Server
   public createRetryStrategy(
     options: RetryStrategyOptions
   ): undefined | number | void {
-    this.logger.log('Retrying connection');
+    this.logger.debug('Retrying connection');
 
     if (options.error && (options.error as any).code === 'ECONNREFUSED') {
       this.logger.error(`Error ECONNREFUSED: ${this.url}`);
@@ -170,6 +170,10 @@ export class RedisStreamStrategy extends Server
     if (this.isExplicitlyTerminated) {
       return undefined;
     }
+
+    this.logger.debug(
+      `Retrying attempt: ${options.attempt} of ${retryAttempts}`
+    );
 
     if (!retryAttempts || options.attempt > retryAttempts) {
       this.logger.error(`Retry time exhausted: ${this.url}`);
