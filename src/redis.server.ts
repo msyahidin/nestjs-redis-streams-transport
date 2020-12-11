@@ -10,6 +10,7 @@ import { RedisStreamContext } from './redis.stream.context';
 import { replyToObject } from './utils/reply-to-object';
 import { get } from 'lodash';
 import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
+import { randomBytes } from 'crypto';
 
 export class RedisStreamStrategy extends Server
   implements CustomTransportStrategy {
@@ -49,7 +50,20 @@ export class RedisStreamStrategy extends Server
 
     // register redis message handlers
     this.client.on('ready', () => {
-      this.logger.debug('Redis connection is ready');
+      const clientName = get(
+        this.options,
+        'consumer',
+        randomBytes(16).toString('hex')
+      );
+      this.client.send_command(
+        'CLIENT',
+        ['SETNAME', clientName],
+        (err, res) => {
+          this.logger.debug(
+            'Redis connection is established with name: ' + clientName
+          );
+        }
+      );
       this.bindHandlers();
     });
   }
