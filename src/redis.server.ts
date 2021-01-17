@@ -11,6 +11,7 @@ import { replyToObject } from './utils/reply-to-object';
 import { get } from 'lodash';
 import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
 import { randomBytes } from 'crypto';
+import { Observable } from 'rxjs';
 
 export class RedisStreamStrategy extends Server
   implements CustomTransportStrategy {
@@ -82,7 +83,11 @@ export class RedisStreamStrategy extends Server
           reply = reply.message;
         }
 
-        await handler(reply, streamContext);
+        const response$ = this.transformToObservable(
+          await handler(reply, streamContext)
+        ) as Observable<any>;
+
+        response$ && this.send(response$, () => undefined);
       }
     });
   }
