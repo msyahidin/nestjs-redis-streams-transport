@@ -1,3 +1,0 @@
-export declare const ECONNREFUSED = "ECONNREFUSED";
-export declare const CONN_ERR = "CONN_ERR";
-export declare const REDIS_STREAMS_CLIENT_MODULE_OPTIONS = "REDIS_STREAMS_CLIENT_MODULE_OPTIONS";
