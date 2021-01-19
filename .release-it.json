@@ -1,0 +1,19 @@
+{
+  "git": {
+    "requireBranch": "master",
+    "commit": true,
+    "commitMessage": "chore: Release ${version}",
+    "tag": true
+  },
+  "gitlab": {
+    "release": false
+  },
+  "plugins": {
+    "@release-it/keep-a-changelog": {
+      "filename": "CHANGELOG.md"
+    }
+  },
+  "npm": {
+    "publish": false
+  }
+}
