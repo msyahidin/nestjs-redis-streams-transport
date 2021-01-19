@@ -13,7 +13,8 @@ import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
 import { randomBytes } from 'crypto';
 import { Observable } from 'rxjs';
 
-export class RedisStreamStrategy extends Server
+export class RedisStreamStrategy
+  extends Server
   implements CustomTransportStrategy {
   private readonly url: string;
   private client: RedisClient;
@@ -79,7 +80,11 @@ export class RedisStreamStrategy extends Server
       const handler = this.messageHandlers.get(pattern);
       if (handler) {
         let reply = replyToObject(payload);
-        if (reply && reply.hasOwnProperty('message')) {
+        if (
+          reply &&
+          reply.hasOwnProperty('message') &&
+          Object.keys(reply).length === 1
+        ) {
           reply = reply.message;
         }
 
