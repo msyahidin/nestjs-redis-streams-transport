@@ -11,12 +11,16 @@ type groupType =
       consumer: string;
     };
 
+export type RedisInterceptor = {
+  interceptor?: (request: Record<string, unknown>) => void | Promise<void>;
+};
+
 export interface RedisStreamTransportOptions extends RedisOptions {
   options?: RedisOptions['options'] & groupType;
 }
 
 export interface RedisStreamModuleOptions extends RedisOptions {
-  options?: RedisOptions['options'];
+  options?: RedisOptions['options'] & RedisInterceptor;
 }
 
 export interface RedisStreamsOptionsFactory {

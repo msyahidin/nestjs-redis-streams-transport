@@ -16,6 +16,7 @@ import { share, take } from 'rxjs/operators';
 import { CONNECT_EVENT, ERROR_EVENT } from '@nestjs/microservices/constants';
 import { get as _get } from 'lodash';
 import { ECONNREFUSED, REDIS_STREAMS_CLIENT_MODULE_OPTIONS } from './constants';
+import { RedisInterceptor } from './interfaces';
 
 @Injectable()
 export class RedisStreamClient extends ClientProxy {
@@ -23,14 +24,14 @@ export class RedisStreamClient extends ClientProxy {
   protected readonly subscriptionsCount = new Map<string, number>();
   protected readonly url?: string;
   protected client: RedisClient;
-  protected options: RedisOptions['options'];
+  protected options: RedisOptions['options'] & RedisInterceptor;
 
   protected connection: Promise<any>;
   protected isExplicitlyTerminated = false;
 
   constructor(
     @Inject(REDIS_STREAMS_CLIENT_MODULE_OPTIONS)
-    options?: RedisOptions['options']
+    options?: RedisOptions['options'] & RedisInterceptor
   ) {
     super();
 
@@ -114,18 +115,23 @@ export class RedisStreamClient extends ClientProxy {
     throw new Error('Method not implemented.');
   }
 
-  protected dispatchEvent<T = any>(packet: ReadPacket<any>): Promise<T> {
+  protected async dispatchEvent<T = any>(packet: ReadPacket<any>): Promise<T> {
     const pattern = this.normalizePattern(packet.pattern);
     const serializedPacket = this.serializer.serialize(packet);
     const payload = serializedPacket.data;
     const canBeSerialized = (arg: any) =>
       typeof arg === 'object' && arg !== null;
 
+    if (this?.options.interceptor) {
+      await this.options.interceptor(payload);
+    }
+
     if (canBeSerialized(payload) && !Array.isArray(payload)) {
       const redisArgs = Object.entries(payload).flatMap(([property, value]) => [
         property,
         canBeSerialized(value) ? JSON.stringify(value) : value,
       ]) as string[];
+
       return new Promise((resolve, reject) =>
         this.client.xadd(pattern, '*', ...redisArgs, (err) => {
           err ? reject(err) : resolve();
