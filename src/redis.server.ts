@@ -61,7 +61,7 @@ export class RedisStreamStrategy
         'CLIENT',
         ['SETNAME', clientName],
         (err, res) => {
-          this.logger.debug(
+          this.logger.warn(
             'Redis connection is established with name: ' + clientName
           );
         }
@@ -185,7 +185,7 @@ export class RedisStreamStrategy
   public createRetryStrategy(
     options: RetryStrategyOptions
   ): undefined | number | void {
-    this.logger.debug('Retrying connection');
+    this.logger.warn('Retrying connection');
 
     if (options.error && (options.error as any).code === 'ECONNREFUSED') {
       this.logger.error(`Error ECONNREFUSED: ${this.url}`);
@@ -195,7 +195,7 @@ export class RedisStreamStrategy
       return undefined;
     }
 
-    this.logger.debug(
+    this.logger.warn(
       `Retrying attempt: ${options.attempt} of ${retryAttempts}`
     );
 
